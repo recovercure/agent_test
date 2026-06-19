@@ -6,6 +6,7 @@ __pycache__/
 
 # Config with API keys
 config.json
+set.txt
 
 # IDE
 .vscode/
