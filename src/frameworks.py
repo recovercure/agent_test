@@ -1,7 +1,6 @@
 """Consulting framework matching and structured analysis."""
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 from .knowledge import Chunk
 
@@ -11,10 +10,11 @@ class AnalysisResult:
     """Structured analysis output."""
 
     question: str
-    frameworks_used: List[str]
-    analysis_path: List[str]
-    retrieved_context: List[Chunk]
+    frameworks_used: list[str]
+    analysis_path: list[str]
+    retrieved_context: list[Chunk]
     recommendation: str
+    verbose: bool = False
 
 
 # Question type to framework mapping
@@ -48,7 +48,7 @@ FRAMEWORK_HINTS = {
     "客户": ["3C 模型", "商业画布", "消费者决策旅程"],
     "价值": ["价值链分析", "商业画布"],
     "流程": ["价值链分析", "PDCA 循环"],
-    "组织": ["麦肯锡7步法", "MECE 原则", "麦肯锡 7S 框架"],
+    "组织": ["问题解决七步法", "MECE 原则", "麦肯锡 7S 框架"],
     # New frameworks
     "规划": ["战略金字塔", "战略屋", "平衡计分卡"],
     "愿景": ["战略屋", "战略金字塔", "Playing to Win"],
@@ -79,7 +79,7 @@ FRAMEWORK_HINTS = {
 }
 
 
-def match_frameworks(question: str, retrieved_chunks: List[Chunk]) -> List[str]:
+def match_frameworks(question: str, retrieved_chunks: list[Chunk]) -> list[str]:
     """Determine which frameworks to use based on question and retrieved context."""
     candidates = {}
 
@@ -104,8 +104,8 @@ def match_frameworks(question: str, retrieved_chunks: List[Chunk]) -> List[str]:
 
 def build_analysis_prompt(
     question: str,
-    frameworks: List[str],
-    context_chunks: List[Chunk],
+    frameworks: list[str],
+    context_chunks: list[Chunk],
 ) -> str:
     """Build the LLM prompt for structured analysis."""
 
@@ -117,7 +117,13 @@ def build_analysis_prompt(
 
     frameworks_str = "、".join(frameworks)
 
-    prompt = f"""你是一位资深管理咨询顾问。请基于以下知识库内容，使用咨询框架对问题进行结构化拆解和分析。
+    prompt = f"""你是一位资深管理咨询顾问。请基于以下知识库内容，使用咨询框架对问题进行完整、详细的结构化分析。
+
+要求：
+- 直接输出完整的分析报告，不要输出"我将使用XX框架进行分析"之类的引导语
+- 每个框架的应用要结合具体问题展开，不要只列出框架定义
+- 建议要具体、可执行，不要泛泛而谈
+- 输出完整内容，不要省略任何章节
 
 ## 用户问题
 {question}
@@ -128,27 +134,35 @@ def build_analysis_prompt(
 ## 知识库参考内容
 {context_text}
 
-## 输出要求
-
-请按以下格式输出结构化分析:
+## 输出格式
 
 ### 一、问题界定
 用一句话清晰定义核心问题。
 
-### 二、分析路径
-使用推荐的咨询框架，逐步拆解问题:
-- 每个框架的应用逻辑
-- 关键维度和分析要素
-- 框架之间的关联
+### 二、框架分析
+对每个推荐框架，结合问题进行具体分析：
+- [框架名称]: 该框架如何应用于本问题，关键维度是什么，得出什么初步判断
 
 ### 三、结构化拆解
-用MECE原则对问题进行层次化拆解，展示为树状结构。
+用MECE原则对问题进行层次化拆解，展示为树状结构。例如：
+- 一级维度A
+  - 二级维度A1
+  - 二级维度A2
+- 一级维度B
+  - 二级维度B1
+  - 二级维度B2
 
 ### 四、关键发现与建议
-基于框架分析得出:
-- 核心发现 (2-3条)
-- 具体建议 (可执行的行动项)
-- 风险提示
+核心发现 (2-3条):
+- 发现1: ...
+- 发现2: ...
+
+具体建议 (可执行的行动项):
+- 建议1: ...
+- 建议2: ...
+
+风险提示:
+- 风险1: ...
 
 ### 五、下一步行动
 建议进一步收集哪些数据或信息来深化分析。
