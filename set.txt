@@ -1,7 +1,0 @@
-$env:LLM_API_KEY="tp-c1czh4vs780ioky6d3rhdl4v4n9l0b8hqm05guy2e28tcebd"
-$env:LLM_BASE_URL="https://token-plan-cn.xiaomimimo.com/v1"
-$env:LLM_MODEL="mimo-v2.5-pro"  
-
-$env:LLM_API_KEY="sk-e3af9bbda4c64cab82189b3ccdc6ebbd"
-$env:LLM_BASE_URL="https://api.deepseek.com/v1"
-$env:LLM_MODEL="deepseek-v4-flash"  
