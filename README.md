@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Consulting RAG Agent - 管理咨询知识问答系统
 
 基于 RAG (检索增强生成) 的管理咨询框架分析 Agent。输入行业问题，自动匹配咨询框架，输出结构化分析路径和建议。
@@ -78,3 +79,6 @@ consulting-rag-agent/
 ## 扩展
 
 往 `knowledge_base/` 目录添加 `.md` 文件即可扩展知识库，格式参考 `consulting_frameworks.md`。
+=======
+# agent_test
+>>>>>>> 6baf2c58a3f92b0269447e185e77c074ca088391
