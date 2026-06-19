@@ -19,7 +19,6 @@ class AnalysisResult:
 
 # Question type to framework mapping
 FRAMEWORK_HINTS = {
-    # Original frameworks
     "行业": ["波特五力模型", "PEST/PESTEL 分析"],
     "竞争": ["波特五力模型", "3C 模型"],
     "战略": ["3C 模型", "安索夫矩阵", "SWOT 分析", "战略屋", "Playing to Win"],
@@ -49,7 +48,6 @@ FRAMEWORK_HINTS = {
     "价值": ["价值链分析", "商业画布"],
     "流程": ["价值链分析", "PDCA 循环"],
     "组织": ["问题解决七步法", "MECE 原则", "麦肯锡 7S 框架"],
-    # New frameworks
     "规划": ["战略金字塔", "战略屋", "平衡计分卡"],
     "愿景": ["战略屋", "战略金字塔", "Playing to Win"],
     "使命": ["战略屋", "战略金字塔"],
@@ -60,7 +58,7 @@ FRAMEWORK_HINTS = {
     "转型": ["未来倒推战略", "影响力模型", "战略屋"],
     "变革": ["影响力模型", "麦肯锡 7S 框架"],
     "文化": ["麦肯锡 7S 框架", "影响力模型"],
-    "人才": ["麦肯锡 7S 框架", "4C 招聘框架"],
+    "人才": ["麦肯锡 7S 框架"],
     "领导": ["影响力模型", "麦肯锡 7S 框架"],
     "执行": ["PDCA 循环", "平衡计分卡", "战略路线图"],
     "落地": ["PDCA 循环", "战略路线图", "影响力模型"],
@@ -83,21 +81,16 @@ def match_frameworks(question: str, retrieved_chunks: list[Chunk]) -> list[str]:
     """Determine which frameworks to use based on question and retrieved context."""
     candidates = {}
 
-    # 1. Keyword-based hint matching
     for keyword, frameworks in FRAMEWORK_HINTS.items():
         if keyword in question:
             for fw in frameworks:
                 candidates[fw] = candidates.get(fw, 0) + 0.5
 
-    # 2. Boost based on retrieval scores
     for chunk in retrieved_chunks:
         fw = chunk.framework_name
         candidates[fw] = candidates.get(fw, 0) + chunk.score
 
-    # Sort by score, return top matches
     sorted_fws = sorted(candidates.items(), key=lambda x: x[1], reverse=True)
-
-    # Return frameworks with meaningful scores
     result = [fw for fw, score in sorted_fws if score > 0.1]
     return result[:3] if result else ["MECE 原则", "问题解决七步法"]
 
@@ -109,62 +102,24 @@ def build_analysis_prompt(
 ) -> str:
     """Build the LLM prompt for structured analysis."""
 
-    # Format retrieved context
     context_text = ""
     for i, chunk in enumerate(context_chunks, 1):
-        context_text += f"\n--- 知识片段 {i} (来源: {chunk.framework_name}) ---\n"
+        context_text += f"\n--- 知识片段 {i} ({chunk.framework_name}) ---\n"
         context_text += chunk.text + "\n"
 
-    frameworks_str = "、".join(frameworks)
+    frameworks_str = "\n".join(f"- {fw}" for fw in frameworks)
 
-    prompt = f"""你是一位资深管理咨询顾问。请基于以下知识库内容，使用咨询框架对问题进行完整、详细的结构化分析。
-
-要求：
-- 直接输出完整的分析报告，不要输出"我将使用XX框架进行分析"之类的引导语
-- 每个框架的应用要结合具体问题展开，不要只列出框架定义
-- 建议要具体、可执行，不要泛泛而谈
-- 输出完整内容，不要省略任何章节
-
-## 用户问题
-{question}
-
-## 推荐使用的咨询框架
-{frameworks_str}
-
-## 知识库参考内容
-{context_text}
-
-## 输出格式
-
-### 一、问题界定
-用一句话清晰定义核心问题。
-
-### 二、框架分析
-对每个推荐框架，结合问题进行具体分析：
-- [框架名称]: 该框架如何应用于本问题，关键维度是什么，得出什么初步判断
-
-### 三、结构化拆解
-用MECE原则对问题进行层次化拆解，展示为树状结构。例如：
-- 一级维度A
-  - 二级维度A1
-  - 二级维度A2
-- 一级维度B
-  - 二级维度B1
-  - 二级维度B2
-
-### 四、关键发现与建议
-核心发现 (2-3条):
-- 发现1: ...
-- 发现2: ...
-
-具体建议 (可执行的行动项):
-- 建议1: ...
-- 建议2: ...
-
-风险提示:
-- 风险1: ...
-
-### 五、下一步行动
-建议进一步收集哪些数据或信息来深化分析。
-"""
+    prompt = (
+        "你是资深管理咨询顾问。基于以下知识库，用咨询框架对问题做完整分析。\n"
+        "要求：直接输出报告，不要引导语；结合问题展开每个框架；建议要具体可执行；必须写完所有章节。\n\n"
+        f"## 问题\n{question}\n\n"
+        f"## 推荐框架\n{frameworks_str}\n\n"
+        f"## 知识库\n{context_text}\n\n"
+        "## 输出格式\n\n"
+        "### 一、问题界定\n一句话定义核心问题。\n\n"
+        "### 二、框架分析\n对每个框架结合问题具体分析，说明应用逻辑和初步判断。\n\n"
+        "### 三、MECE结构化拆解\n用树状结构层次化拆解问题。\n\n"
+        "### 四、关键发现与建议\n核心发现2-3条、具体建议（可执行行动项）、风险提示。\n\n"
+        "### 五、下一步行动\n需要进一步收集的数据或信息。\n"
+    )
     return prompt

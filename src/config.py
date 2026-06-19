@@ -36,7 +36,7 @@ class Config:
         self.LLM_BASE_URL = os.getenv("LLM_BASE_URL") or file_cfg.get("llm_base_url", "https://api.openai.com/v1")
         self.LLM_MODEL = os.getenv("LLM_MODEL") or file_cfg.get("llm_model", "gpt-4o-mini")
         self.LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE") or file_cfg.get("llm_temperature", 0.3))
-        self.LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS") or file_cfg.get("llm_max_tokens", 2000))
+        self.LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS") or file_cfg.get("llm_max_tokens", 4000))
 
         # RAG settings
         self.KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR") or file_cfg.get(
